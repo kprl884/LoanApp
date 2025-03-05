@@ -75,6 +75,14 @@ class AuthViewModel @Inject constructor(
                 return@launch
             }
 
+            if (preferencesManager.isUserRegistered(state.value.email)) {
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    errorMessage = "Email already registered"
+                )
+                return@launch
+            }
+
             val user = User(
                 id = System.currentTimeMillis().toString(),
                 email = state.value.email,
@@ -94,7 +102,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
 
-            val savedUser = preferencesManager.getUser()
+            val savedUser = preferencesManager.getUserByEmail(state.value.email)
             if (savedUser?.email == state.value.email) {
                 _state.value = _state.value.copy(
                     isLoading = false,
@@ -112,7 +120,7 @@ class AuthViewModel @Inject constructor(
 
     private fun performLogout() {
         viewModelScope.launch {
-            preferencesManager.clearUser()
+            preferencesManager.logout()
             _state.value = AuthState()
         }
     }

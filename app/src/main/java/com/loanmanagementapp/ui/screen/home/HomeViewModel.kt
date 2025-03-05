@@ -131,10 +131,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    // todo This function can be used when we want to delete the user from the local
     fun logout() {
         viewModelScope.launch {
-            preferencesManager.clearUser()
+            preferencesManager.logout()
         }
     }
 }
