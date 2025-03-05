@@ -1,11 +1,11 @@
 package com.loanmanagementapp.ui.screen.home
 
 import android.content.Context
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.loanmanagementapp.data.LoanRepository
 import com.loanmanagementapp.data.local.PreferencesManager
+import com.loanmanagementapp.domain.factory.LoanStrategyFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val loanRepository: LoanRepository,
+    private val loanStrategyFactory: LoanStrategyFactory,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
     private val _homeUiState = MutableStateFlow(HomeUIState())
@@ -33,6 +34,16 @@ class HomeViewModel @Inject constructor(
 
     fun onEvent(homeUIEvent: HomeUIEvent) {
         when (homeUIEvent) {
+            is HomeUIEvent.AmountChanged -> {
+                _homeUiState.update { it.copy(amount = homeUIEvent.amount) }
+            }
+            is HomeUIEvent.TermChanged -> {
+                _homeUiState.update { it.copy(term = homeUIEvent.term) }
+            }
+            is HomeUIEvent.LoanTypeSelected -> {
+                _homeUiState.update { it.copy(selectedLoanType = homeUIEvent.type) }
+            }
+            HomeUIEvent.CalculateLoan -> calculateLoan()
             HomeUIEvent.Logout -> Unit
             is HomeUIEvent.UpdateLoans -> updateLoan(homeUIEvent.context)
         }
@@ -42,8 +53,61 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             _homeUiState.update {
                 it.copy(
-                    listOfLoan = loanRepository.updateLoans(context)
+                    listOfLoan = loanRepository.updateLoans(context),
+                    isLoading = false
                 )
+            }
+        }
+    }
+
+    private fun calculateLoan() {
+        viewModelScope.launch {
+            try {
+                _homeUiState.update { it.copy(isLoading = true) }
+
+                val amount = _homeUiState.value.amount.toDoubleOrNull()
+                val term = _homeUiState.value.term.toIntOrNull()
+
+                if (amount == null || term == null) {
+                    _homeUiState.update {
+                        it.copy(
+                            errorMessage = "Please enter valid amount and term",
+                            isLoading = false
+                        )
+                    }
+                    return@launch
+                }
+
+                val strategy = loanStrategyFactory.createStrategy(_homeUiState.value.selectedLoanType)
+
+                if (term < strategy.getMinTerm() || term > strategy.getMaxTerm()) {
+                    _homeUiState.update {
+                        it.copy(
+                            errorMessage = "Term must be between ${strategy.getMinTerm()} and ${strategy.getMaxTerm()} months",
+                            isLoading = false
+                        )
+                    }
+                    return@launch
+                }
+
+                val interest = strategy.calculateInterest(amount, term)
+                val monthlyPayment = strategy.calculateMonthlyPayment(amount, term)
+
+                _homeUiState.update {
+                    it.copy(
+                        calculatedInterest = interest,
+                        monthlyPayment = monthlyPayment,
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _homeUiState.update {
+                    it.copy(
+                        errorMessage = e.message ?: "Error calculating loan",
+                        isLoading = false
+                    )
+                }
             }
         }
     }

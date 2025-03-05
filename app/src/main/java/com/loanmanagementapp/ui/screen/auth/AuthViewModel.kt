@@ -3,7 +3,7 @@ package com.loanmanagementapp.ui.screen.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.loanmanagementapp.data.local.PreferencesManager
-import com.loanmanagementapp.domain.User
+import com.loanmanagementapp.domain.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

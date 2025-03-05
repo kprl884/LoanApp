@@ -1,6 +1,6 @@
 package com.loanmanagementapp.ui.screen.auth
 
-import com.loanmanagementapp.domain.User
+import com.loanmanagementapp.domain.model.User
 
 data class AuthState(
     val email: String = "",

@@ -3,6 +3,7 @@ package com.loanmanagementapp.di
 import com.loanmanagementapp.data.LoanRepository
 import com.loanmanagementapp.data.LoanService
 import com.loanmanagementapp.data.MockLoanService
+import com.loanmanagementapp.domain.strategy.LoanStatusUpdateStrategy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,5 +19,5 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideLoanRepository(loanService: LoanService): LoanRepository = LoanRepository(loanService)
+    fun provideLoanRepository(loanService: LoanService, loanStatusUpdateStrategy: LoanStatusUpdateStrategy): LoanRepository = LoanRepository(loanService, loanStatusUpdateStrategy)
 }

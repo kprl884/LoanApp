@@ -2,7 +2,7 @@ package com.loanmanagementapp.data.local
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.loanmanagementapp.domain.User
+import com.loanmanagementapp.domain.model.User
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -39,6 +39,4 @@ class PreferencesManager @Inject constructor(
             remove(KEY_USER_NAME)
         }
     }
-
-    fun isUserLoggedIn(): Boolean = getUser() != null
-} 
+}
