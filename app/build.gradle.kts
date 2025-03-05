@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt") // Kapt'ı doğrudan buraya ekledik
     alias(libs.plugins.dagger.hilt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -84,6 +85,7 @@ dependencies {
     kapt(libs.hilt.compiler.v250)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation("androidx.room:room-ktx:2.6.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0") // Use appropriate version
 
     // Coroutine support
     implementation(libs.kotlinx.coroutines.android)
