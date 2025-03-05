@@ -23,6 +23,7 @@ class HomeNavRegisterer : NavRegisterer {
                 onEvent = { homeUiEvent ->
                     when (homeUiEvent) {
                         HomeUIEvent.Logout -> {
+                            homeViewModel.logout()
                             navController.navigate(Screen.LoginScreen)
                         }
 
