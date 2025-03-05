@@ -6,11 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.loanmanagementapp.data.LoanRepository
 import com.loanmanagementapp.data.local.PreferencesManager
 import com.loanmanagementapp.domain.factory.LoanStrategyFactory
+import com.loanmanagementapp.domain.usecase.GetUserLoansUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -19,7 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val loanRepository: LoanRepository,
+    private val getUserLoansUseCase: GetUserLoansUseCase,
     private val loanStrategyFactory: LoanStrategyFactory,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
@@ -50,13 +52,30 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun updateLoan(context: Context) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _homeUiState.update {
-                it.copy(
-                    listOfLoan = loanRepository.updateLoans(context),
-                    isLoading = false
-                )
-            }
+        viewModelScope.launch {
+            _homeUiState.update { it.copy(isLoading = true) }
+
+            getUserLoansUseCase(context)
+                .onStart {
+                    // Optional: You can update UI state when flow starts
+                }
+                .catch { exception ->
+                    _homeUiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "Error loading loans: ${exception.message}"
+                        )
+                    }
+                }
+                .collect { loans ->
+                    _homeUiState.update {
+                        it.copy(
+                            listOfLoan = loans,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    }
+                }
         }
     }
 
